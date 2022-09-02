@@ -1,21 +1,25 @@
 # filename: miscX.py
 # file purpose: Python class with misc. functionality
-# not related to misc stock Python lib. 
+# miscX is not related to misc stock Python lib. 
 # features safer, improved convenience scripts
-# this lib is used & written  by K0K0SHA's GitHub code
-# IMPORTS AND JUSTIFICATIONS:
+# script author: K0K0$H@
+
 ######################################################
 import os	# for terminal execution and file ops
-import platform # for OS identification
-import shutil   # for checking installation
+import platform # OS identification
+import shutil   # Install checks and other uses
+import inquirer # TUI (Terminal User Interface)
+import re	# regex
 
-# GENERAL-PURPOSE LIB CLASS CONSIDERATIONS
+# GENERAL LIB CONSIDERATIONS
 #####
 # add more basic functions first, and more complex ones after
+# Experimental code goes on the very bottom
+# Code which is too specific, or "niche", 
 
-
+# COMPATIBILITY
 # miscX is customized to K0K0$HA's development style. 
-# System intended is Linux Mint ~20
+# This script is tested on Linux Mint 20 Cinnamon
 
 
 class miscX:
@@ -299,6 +303,9 @@ class miscX:
 	# These might work on Android, but they are functions designed to work on Linux Mint. They're bash one-liners.
 	# For some more fun, try these on a VM!
 	
+	
+	# FUNCTION NAME" get_nic_list()
+	# returns a list of network interfaces that the user has working.
 	# uses hwinfo for info (TODO other options are ifconfig, iwconfig, and airmon-ng)
 	# refer to http://www.linuxintro.org/wiki/Hwinfo
 	# sample hwinfo --netcard --short output:
@@ -313,14 +320,23 @@ class miscX:
 			exclude_windows() # hwinfo probably doesn't work on Windows
 			if (!check_install(hwinfo)):
 				print("getNIC() error: hwinfo not installed")
-				return -1
-			commandstr = "hwinfo --netcard --short > ./.netcard.info" 
+				return None
+			commandstr = "hwinfo --netcard --short > ./hw.list "
+			commandstr += "&& sed '1d' ./hw.list | tee ./netcard.info " # outputs netcard info into file, and removes first line of file which is garbage
+			commandstr += "&& rm ./hw.info " 			    
 			returncode = verbosity(commandstr)
-			return returncode
+			if(returncode != 0):
+				print("Warning, nonzero return code in get_NIC_list() command execution ... commandstr = \n")
+				print(commandstr) # debug/verbosity
+			lines = read_file_lines_as_list("./netcard.info")
+			if(lines == None):
+				print("Warning, ./netcard.info is either blank, or is not found.")
+				
+			return lines # a list containing lines of the file ./netcard.info which has NIC info
 		except Exception as E:
 			print("ERROR in get_NIC_list()")
 			print(E)
-			return -1
+			return None
 
 	# TODO this belongs as its own bash one-liner
 	def show_network_drivers():
@@ -336,6 +352,7 @@ class miscX:
 	# TODO make into separate program which has miscX imported. miscX may be stripped.
 	def amon():
 		if checkroot():
+			verbose_echo("amon needs root!")
 			return -1
 		getNIC()
 		list =  read_file_lines_as_list("./.netcard.info"):
