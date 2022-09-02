@@ -31,6 +31,10 @@ class miscX:
 		print("miscX default constructor")
 		verbosity = True
 
+	def showhelp():
+		print("Help page") # under construction
+		return
+
 	# checks if the user is root using os.geteuid()
 	def checkroot():
 		if(os.geteuid() != 0):
@@ -154,10 +158,10 @@ class miscX:
 					print("Dependency not found:\n")
 					print(program)
 					yn = user_confirm("attempt install?")
-						if (yn == True):
+					if (yn == True):
 							a = attempt_install(program)
-								if (a!="install failed"):
-									return True
+							if (a != "install failed"):
+								return True
 					return False
 				return False
 		except Exception as E:
@@ -240,13 +244,22 @@ class miscX:
 			print(E)
 			return None # error condition
 
-	# allows a user to select from a list of files using a fancy TUI
+
+	# function name: select_from_list()
+	# allows a user to select an element from a list
+	# function generation mk.1; no inquirer
+	# very basic TUI
 	def select_from_list(list):
 		try:
 			if (list == None):
 				return None # error
-			l = list[0]
-			# UNDER CONSTRUCTION
+			counter = 0
+			for line in list:
+				print(counter)
+				print(line) # prints the list, with indexes
+				++counter
+			index = get_input_forceloop("enter list index for selection")
+			selection = list[index]
 
 		except Exception as E:
 			print("ERROR")
@@ -318,7 +331,7 @@ class miscX:
 		try:
 			checkroot()
 			exclude_windows() # hwinfo probably doesn't work on Windows
-			if (!check_install(hwinfo)):
+			if (check_install(hwinfo)==False):
 				print("getNIC() error: hwinfo not installed")
 				return None
 			commandstr = "hwinfo --netcard --short > ./hw.list "
@@ -340,7 +353,7 @@ class miscX:
 
 	# TODO this belongs as its own bash one-liner
 	def show_network_drivers():
-		if !linux_only:
+		if (linux_only == False):
 			return -1
 		commandstr='hwinfo --netcard | grep -i model'
 		u=user_confirm("save to local disk?")
@@ -354,11 +367,15 @@ class miscX:
 		if checkroot():
 			verbose_echo("amon needs root!")
 			return -1
-		getNIC()
-		list =  read_file_lines_as_list("./.netcard.info"):
+		list = get_NIC_list()
 		if list:
-			selection = select_from_list(list)
-			commandstr = ""
+			selected_NIC = select_from_list(list) # selection is of type string, not list
+			commandstr = "airmon-ng start "
+			commandstr += selected_NIC
+			verbose_echo(commandstr)
 		else:
 			return -1
 
+# test code normally goes here
+# calling a function here doesn't work
+# to test miscX, try importing it within another program
